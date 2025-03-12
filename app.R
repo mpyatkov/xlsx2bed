@@ -4,28 +4,6 @@ library(readr)
 library(dplyr)
 library(purrr)
 
-#Define UI
-# ui <- fluidPage(
-#   titlePanel("Convert XLSX to BED Files"),
-#   sidebarLayout(
-#     sidebarPanel(
-#       fileInput("fileInput", "Upload XLSX Files",
-#                 multiple = TRUE,
-#                 accept = c(".xlsx")),
-#       helpText(
-#         "Note: The uploaded XLSX files must contain at least the following columns: ",
-#         strong("'chrom', 'start', and 'end'."),
-#         "Additional columns will be ignored."
-#       ),
-#       actionButton("process", "Convert to BED")
-#     ),
-#     mainPanel(
-#       uiOutput("downloadUI")
-#     )
-#   )
-# )
-
-
 # Define UI (Updated)
 ui <- fluidPage(
   theme = shinythemes::shinytheme("cerulean"),  # Add a theme for improved appearance
@@ -36,7 +14,7 @@ ui <- fluidPage(
       helpText(
         "Upload one or more XLSX files for conversion. Each file must contain the following columns:",
         tags$ul(
-          tags$li(strong("'chrom'")),
+          tags$li(strong("'chr'")),
           tags$li(strong("'start'")),
           tags$li(strong("'end'"))
         ),
@@ -62,7 +40,6 @@ ui <- fluidPage(
 )
 
 
-
 # Define server logic
 server <- function(input, output, session) {
   processed_files <- reactiveVal(NULL)
@@ -84,7 +61,7 @@ server <- function(input, output, session) {
           data <- read_excel(file)
           
           # Validate required columns
-          required_cols <- c("chrom", "start", "end")
+          required_cols <- c("chr", "start", "end")
           if (!all(required_cols %in% colnames(data))) {
             validation_failed <<- TRUE
             stop(paste("File", filename, "is missing required BED columns"))
@@ -93,7 +70,7 @@ server <- function(input, output, session) {
           # Select relevant columns and convert to BED format
           bed_data <- data |>
             select(all_of(required_cols)) |>
-            arrange(chrom, start, end)
+            arrange(chr, start, end)
           
           # Save as BED file using readr::write_delim
           bed_file <- file.path(output_dir, paste0(tools::file_path_sans_ext(filename), ".bed"))
@@ -132,18 +109,6 @@ server <- function(input, output, session) {
       file.copy(processed_files(), file)
     }
   )
-  
-  # output$downloadData <- downloadHandler(
-  #   filename = function() {
-  #     "converted_bed_files.zip"
-  #   },
-  #   content = function(file) {
-  #     zip_path <- processed_files()
-  #     req(zip_path)  # Ensure zip file exists
-  #     file.copy(zip_path, file)  # Copy the zip file to the user's download location
-  #     on.exit(file.remove(zip_path))  # Remove the zip file after downloading
-  #   }
-  # )
   
 }
 
